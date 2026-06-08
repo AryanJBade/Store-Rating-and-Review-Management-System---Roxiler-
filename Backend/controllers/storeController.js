@@ -1,28 +1,57 @@
 const db = require("../config/db");
 
 const createStore = (req, res) => {
-    const {
-        name,
-        email,
-        address,
-        owner_id
-    } = req.body;
+    const { name, email, address, owner_id } = req.body;
+    const requestingUser = req.user;
+
+    // Validate name length
+    if (!name || name.length < 20 || name.length > 60) {
+        return res.status(400).json({
+            message: "Store name must be between 20 and 60 characters",
+        });
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        return res.status(400).json({
+            message: "Invalid email format",
+        });
+    }
+
+    // Validate address length
+    if (address && address.length > 400) {
+        return res.status(400).json({
+            message: "Address cannot exceed 400 characters",
+        });
+    }
+
+    let resolvedOwnerId = requestingUser.role === "STORE_OWNER" ? requestingUser.id : owner_id;
+
+    if (!name || !email || !address || !resolvedOwnerId) {
+        return res.status(400).json({
+            message: "Store name, email, address, and owner_id are required",
+        });
+    }
 
     db.query(
         "INSERT INTO stores(name,email,address,owner_id) VALUES(?,?,?,?)",
-        [name, email, address, owner_id],
-        (err, result) => {
+        [name, email, address, resolvedOwnerId],
+        (err) => {
             if (err) {
                 return res.status(500).json(err);
             }
 
             res.status(201).json({
-                message: "Store Created Successfully"
+                message: "Store Created Successfully",
             });
         }
     );
 };
+
 const getAllStores = (req, res) => {
+    const userId = req.user.id;
+
     db.query(
         `
     SELECT
@@ -30,12 +59,20 @@ const getAllStores = (req, res) => {
       s.name,
       s.email,
       s.address,
-      ROUND(AVG(r.rating),1) AS average_rating
+      ROUND(AVG(r.rating),1) AS average_rating,
+      (
+        SELECT rating
+        FROM ratings
+        WHERE user_id = ?
+          AND store_id = s.id
+        LIMIT 1
+      ) AS user_rating
     FROM stores s
     LEFT JOIN ratings r
     ON s.id = r.store_id
-    GROUP BY s.id
+    GROUP BY s.id, s.name, s.email, s.address
     `,
+        [userId],
         (err, result) => {
             if (err) {
                 return res.status(500).json(err);

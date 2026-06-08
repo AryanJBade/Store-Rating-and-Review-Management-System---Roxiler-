@@ -5,7 +5,39 @@ const jwt = require("jsonwebtoken");
 // SIGNUP
 const signup = async (req, res) => {
     try {
-        const { name, email, password, address } = req.body;
+        const { name, email, password, address, role } = req.body;
+
+        // Validate name length
+        if (!name || name.length < 20 || name.length > 60) {
+            return res.status(400).json({
+                message: "Name must be between 20 and 60 characters",
+            });
+        }
+
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return res.status(400).json({
+                message: "Invalid email format",
+            });
+        }
+
+        // Validate address length
+        if (address && address.length > 400) {
+            return res.status(400).json({
+                message: "Address cannot exceed 400 characters",
+            });
+        }
+
+        // Validate password format
+        const passwordRegex = /^(?=.*[A-Z])(?=.*[!@#$%^&*]).{8,16}$/;
+        if (!passwordRegex.test(password)) {
+            return res.status(400).json({
+                message: "Password must be 8-16 characters and contain at least one uppercase letter and one special character",
+            });
+        }
+
+        const userRole = role === "STORE_OWNER" ? "STORE_OWNER" : "USER";
 
         db.query(
             "SELECT * FROM users WHERE email = ?",
@@ -23,7 +55,7 @@ const signup = async (req, res) => {
 
                 db.query(
                     "INSERT INTO users(name,email,password,address,role) VALUES(?,?,?,?,?)",
-                    [name, email, hashedPassword, address, "USER"],
+                    [name, email, hashedPassword, address, userRole],
                     (err) => {
                         if (err) return res.status(500).json(err);
 

@@ -10,9 +10,12 @@ app.use(express.json());
 
 const authRoutes = require("./routes/authRoutes");
 const adminRoutes = require("./routes/adminRoutes");
+const ratingRoutes = require("./routes/ratingRoutes");
 
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/store", storeRoutes);
+app.use("/api/rating", ratingRoutes);
 
 app.get("/", (req, res) => {
     res.send("Store Rating API Running");
@@ -32,8 +35,3 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
     console.log(`Server Running On Port ${PORT}`);
 });
-app.use("/api/store", storeRoutes);
-
-const ratingRoutes = require("./routes/ratingRoutes");
-
-app.use("/api/rating", ratingRoutes);

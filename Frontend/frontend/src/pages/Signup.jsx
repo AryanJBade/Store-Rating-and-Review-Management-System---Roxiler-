@@ -11,6 +11,7 @@ function Signup() {
         email: "",
         address: "",
         password: "",
+        role: "USER",
     });
 
     const handleChange = (e) => {
@@ -31,6 +32,14 @@ function Signup() {
         ) {
             return alert(
                 "Name must be between 20 and 60 characters"
+            );
+        }
+
+        // Email Validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(formData.email)) {
+            return alert(
+                "Please enter a valid email address"
             );
         }
 
@@ -117,6 +126,16 @@ function Signup() {
                         onChange={handleChange}
                         required
                     />
+
+                    <select
+                        name="role"
+                        className="form-select mb-3"
+                        value={formData.role}
+                        onChange={handleChange}
+                    >
+                        <option value="USER">Normal User</option>
+                        <option value="STORE_OWNER">Store Owner</option>
+                    </select>
 
                     <input
                         type="password"

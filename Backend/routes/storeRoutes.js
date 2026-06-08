@@ -12,10 +12,19 @@ const {
     usersWhoRated,
 } = require("../controllers/storeController");
 
+const isOwnerOrAdmin = (req, res, next) => {
+    if (req.user.role !== "ADMIN" && req.user.role !== "STORE_OWNER") {
+        return res.status(403).json({
+            message: "Access Denied. Admin or Store Owner only",
+        });
+    }
+    next();
+};
+
 router.post(
     "/create",
     verifyToken,
-    isAdmin,
+    isOwnerOrAdmin,
     createStore
 );
 router.get(
